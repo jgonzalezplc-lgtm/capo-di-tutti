@@ -34,4 +34,10 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
   return { id: user.id, email: user.email };
 }
 
+export async function getAdminAccessToken(): Promise<string> {
+  const token = (await cookies()).get(ACCESS_COOKIE)?.value;
+  if (!token) throw new Error("No existe una sesión administrativa activa.");
+  return token;
+}
+
 export const adminCookieNames = { access: ACCESS_COOKIE, refresh: REFRESH_COOKIE };

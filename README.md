@@ -26,3 +26,7 @@ Mantén `CAPO_DEMO_MODE=true` durante el diseño. Cuando sea `false`, el acceso 
 3. Instrumentar los wrappers de Gemini, Serper y correo.
 4. Exponer vistas/RPC administrativas protegidas.
 5. Reemplazar el repositorio demo sin cambiar los componentes visuales.
+
+El conector ya está implementado detrás de `CAPO_DEMO_MODE=false`. Requiere
+`BAIYER_ADMIN_API_URL`, una sesión Supabase válida y que el usuario exista en
+`admin_users`; hasta entonces el modo demo permanece como valor seguro.
