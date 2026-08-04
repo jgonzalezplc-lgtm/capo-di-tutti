@@ -12,7 +12,13 @@ export default async function DatabasePage({ searchParams }: { searchParams: Pro
   const summary = await getDatabaseSummary();
   const requested = (await searchParams).resource;
   const selected = summary.resources.find(row => row.key === requested && row.available)?.key ?? summary.resources.find(row => row.available)?.key;
-  const rows = selected ? await getDatabaseRows(selected) : null;
+  let rows = null;
+  let loadError = "";
+  try {
+    rows = selected ? await getDatabaseRows(selected) : null;
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : "No fue posible consultar este recurso.";
+  }
   const columns = rows?.items[0] ? Object.keys(rows.items[0]).slice(0, 9) : [];
   const total = summary.resources.reduce((sum, row) => sum + row.count, 0);
   return <main className="page">
@@ -24,6 +30,6 @@ export default async function DatabasePage({ searchParams }: { searchParams: Pro
       <MetricCard label="Modo" value="Solo lectura" detail="Sin editor SQL" icon={Table2} />
     </section>
     <section className="resource-grid">{summary.resources.map(resource => <Link key={resource.key} href={`/base-de-datos?resource=${resource.key}`} className={`resource-card ${selected === resource.key ? "resource-card--active" : ""}`}><div><strong>{labels[resource.key] || resource.key}</strong><small>{resource.table}</small></div><span>{resource.count.toLocaleString("es-CL")}</span><StatusPill tone={resource.available ? "green" : "red"}>{resource.available ? "disponible" : "no disponible"}</StatusPill></Link>)}</section>
-    <section className="panel"><div className="panel__heading"><div><span className="eyebrow">RECURSO SELECCIONADO</span><h2>{selected ? labels[selected] || selected : "Sin recurso"}</h2></div><span className="eyebrow">{rows?.total ?? 0} registros</span></div><div className="table-wrap"><table><thead><tr>{columns.map(column => <th key={column}>{column.replaceAll("_", " ")}</th>)}</tr></thead><tbody>{rows?.items.map((row, index) => <tr key={String(row.id ?? index)}>{columns.map(column => <td key={column}>{display(row[column])}</td>)}</tr>)}{!rows?.items.length && <tr><td colSpan={Math.max(columns.length, 1)}>No hay registros para mostrar.</td></tr>}</tbody></table></div></section>
+    <section className="panel"><div className="panel__heading"><div><span className="eyebrow">RECURSO SELECCIONADO</span><h2>{selected ? labels[selected] || selected : "Sin recurso"}</h2></div><span className="eyebrow">{rows?.total ?? 0} registros</span></div>{loadError && <div className="inline-notice inline-notice--error">{loadError}</div>}<div className="table-wrap"><table><thead><tr>{columns.map(column => <th key={column}>{column.replaceAll("_", " ")}</th>)}</tr></thead><tbody>{rows?.items.map((row, index) => <tr key={String(row.id ?? index)}>{columns.map(column => <td key={column}>{display(row[column])}</td>)}</tr>)}{!rows?.items.length && <tr><td colSpan={Math.max(columns.length, 1)}>{loadError ? "El resto de Capo continúa disponible." : "No hay registros para mostrar."}</td></tr>}</tbody></table></div></section>
   </main>;
 }
