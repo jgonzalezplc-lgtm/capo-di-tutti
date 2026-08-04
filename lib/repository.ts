@@ -51,13 +51,29 @@ export interface SearchRecord {
   organization_id?: string; organization: string; item_nombre?: string; categoria_predicha?: string;
   categorias_usadas: string[]; terminos: string[]; modo: string; n_resultados: number; estado: string;
   cotizacion_id?: string; lista_proyecto_id?: string;
+  project_id?: string; project_name?: string;
 }
 
 export interface EmailRecord {
   id: string; created_at: string; last_message_at?: string; user_id: string; user_name: string;
   user_email?: string; organization_id?: string; organization: string; proveedor_nombre?: string;
   proveedor_email?: string; subject?: string; estado: string;
+  project_id?: string; project_name?: string;
   messages: { total: number; inbound: number; outbound: number; pending: number };
+}
+
+export interface ProjectDetail {
+  id: string; name: string; status?: string; total?: number; created_at: string;
+  organization_id?: string; organization: string; actor: string; actor_email?: string; summary?: string;
+  items: Array<{ cotizacion_id?: string; name: string; quantity: number; compared: boolean; category?: string; status?: string }>;
+}
+
+export interface EmailDetail extends Omit<EmailRecord, "messages"> {
+  messages: Array<{
+    id: string; direction: string; from_email?: string; to_email?: string; subject?: string;
+    body_preview?: string; received_at?: string; created_at?: string; procesado?: boolean;
+    attachments: Array<{ id: string; filename?: string; mime_type?: string }>;
+  }>;
 }
 
 export interface DatabaseResource { key: string; table: string; count: number; available: boolean; error?: string }
@@ -75,6 +91,8 @@ export interface PlansData {
 
 export const getSearches = () => adminFetch<PageResult<SearchRecord>>("/searches?limit=250");
 export const getEmails = () => adminFetch<PageResult<EmailRecord>>("/emails?limit=250");
+export const getProjectDetail = (id: string) => adminFetch<ProjectDetail>(`/projects/${encodeURIComponent(id)}`);
+export const getEmailDetail = (id: string) => adminFetch<EmailDetail>(`/emails/${encodeURIComponent(id)}`);
 export const getDatabaseSummary = () => adminFetch<DatabaseSummary>("/database");
 export const getDatabaseRows = (resource: string) => adminFetch<DatabaseRows>(`/database/${encodeURIComponent(resource)}?limit=100`);
 export const getPlans = () => adminFetch<PlansData>("/plans");

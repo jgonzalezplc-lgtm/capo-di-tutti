@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Search, Telescope, TriangleAlert } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { SectionHeading } from "@/components/section-heading";
@@ -17,9 +18,9 @@ export default async function SearchesPage() {
       <MetricCard label="Expandidas" value={String(expanded)} detail="Búsqueda complementaria" icon={Telescope} />
       <MetricCard label="Sin resultados" value={String(empty)} detail="Requieren revisión" icon={TriangleAlert} tone="warning" />
     </section>
-    <section className="panel"><div className="table-wrap"><table><thead><tr><th>Fecha</th><th>Organización / usuario</th><th>Ítem</th><th>Categoría</th><th>Términos</th><th>Modo</th><th>Resultados</th><th>Estado</th></tr></thead><tbody>
-      {page.items.map(row => <tr key={row.id}><td>{new Date(row.created_at).toLocaleString("es-CL")}</td><td><strong>{row.organization}</strong><small>{row.user_name} · {row.user_email}</small></td><td><strong>{row.item_nombre || "Sin nombre"}</strong><small>{row.cotizacion_id || row.lista_proyecto_id || row.id}</small></td><td>{row.categoria_predicha || row.categorias_usadas?.join(", ") || "—"}</td><td>{row.terminos?.slice(0, 3).join(" · ") || "—"}</td><td><StatusPill tone={row.modo === "expanded" ? "amber" : "neutral"}>{row.modo}</StatusPill></td><td>{row.n_resultados}</td><td><StatusPill tone={row.estado === "satisfactoria" ? "green" : row.estado === "insatisfactoria" ? "red" : "neutral"}>{row.estado}</StatusPill></td></tr>)}
-      {!page.items.length && <tr><td colSpan={8}>Todavía no hay sesiones registradas.</td></tr>}
+    <section className="panel"><div className="table-wrap"><table><thead><tr><th>Fecha</th><th>Organización / usuario</th><th>Proyecto</th><th>Ítem</th><th>Categoría</th><th>Términos</th><th>Modo</th><th>Resultados</th><th>Estado</th></tr></thead><tbody>
+      {page.items.map(row => <tr key={row.id}><td>{new Date(row.created_at).toLocaleString("es-CL")}</td><td><strong>{row.organization}</strong><small>{row.user_name} · {row.user_email}</small></td><td>{row.project_id ? <Link className="table-link" href={`/proyectos/${row.project_id}`}>{row.project_name || "Ver proyecto"}</Link> : "—"}</td><td><strong>{row.item_nombre || "Sin nombre"}</strong><small>{row.cotizacion_id || row.lista_proyecto_id || row.id}</small></td><td>{row.categoria_predicha || row.categorias_usadas?.join(", ") || "—"}</td><td>{row.terminos?.slice(0, 3).join(" · ") || "—"}</td><td><StatusPill tone={row.modo === "expanded" ? "amber" : "neutral"}>{row.modo}</StatusPill></td><td>{row.n_resultados}</td><td><StatusPill tone={row.estado === "satisfactoria" ? "green" : row.estado === "insatisfactoria" ? "red" : "neutral"}>{row.estado}</StatusPill></td></tr>)}
+      {!page.items.length && <tr><td colSpan={9}>Todavía no hay sesiones registradas.</td></tr>}
     </tbody></table></div></section>
   </main>;
 }
