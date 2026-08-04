@@ -8,7 +8,7 @@ async function mutate(path: string, method: string, body?: unknown) {
   const response = await fetch(`/api/admin/${path}`, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   const data = await response.json().catch(() => ({})) as { detail?: string; error?: string };
   if (!response.ok) throw new Error(data.detail || data.error || "No se pudo completar la acción");
-  return data;
+  return data as { detail?: string; error?: string; organization_deleted?: boolean };
 }
 
 export function CreateOrganizationForm() {
@@ -27,7 +27,7 @@ export function AddMemberForm({ organizationId }: { organizationId: string }) {
 
 export function MemberActions({ organizationId, userId, isOwner }: { organizationId: string; userId: string; isOwner: boolean }) {
   const router = useRouter(); const [message, setMessage] = useState("");
-  return <div className="row-actions"><button onClick={async () => { try { await mutate(`users/${userId}/password-recovery`, "POST"); setMessage("Recuperación enviada"); } catch (error) { setMessage(error instanceof Error ? error.message : "Error"); } }}><KeyRound size={14} /> Recuperar clave</button><button disabled={isOwner} className="danger-button" onClick={async () => { const reason = window.prompt("Motivo para remover al miembro"); if (!reason || !window.confirm("¿Remover este miembro de la organización?")) return; try { await mutate(`organizations/${organizationId}/members/${userId}`, "DELETE", { reason }); router.refresh(); } catch (error) { setMessage(error instanceof Error ? error.message : "Error"); } }}><Trash2 size={14} /> Remover</button>{message && <small>{message}</small>}</div>;
+  return <div className="row-actions"><button onClick={async () => { try { await mutate(`users/${userId}/password-recovery`, "POST"); setMessage("Recuperación enviada"); } catch (error) { setMessage(error instanceof Error ? error.message : "Error"); } }}><KeyRound size={14} /> Recuperar clave</button><button className="danger-button" onClick={async () => { const prompt = isOwner ? "Motivo para separar al propietario y eliminar esta organización" : "Motivo para remover al miembro"; const warning = isOwner ? "El propietario es el único miembro. Se eliminará esta organización y su usuario conservará una cuenta individual. ¿Continuar?" : "¿Remover este miembro de la organización?"; const reason = window.prompt(prompt); if (!reason || !window.confirm(warning)) return; try { const result = await mutate(`organizations/${organizationId}/members/${userId}`, "DELETE", { reason }); if (result.organization_deleted) { router.push("/organizaciones"); } router.refresh(); } catch (error) { setMessage(error instanceof Error ? error.message : "Error"); } }}><Trash2 size={14} /> {isOwner ? "Separar y eliminar organización" : "Remover"}</button>{message && <small>{message}</small>}</div>;
 }
 
 export function DeleteOrganizationButton({ organizationId }: { organizationId: string }) {
