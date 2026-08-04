@@ -66,6 +66,10 @@ export interface ProjectDetail {
   id: string; name: string; status?: string; total?: number; created_at: string;
   organization_id?: string; organization: string; actor: string; actor_email?: string; summary?: string;
   items: Array<{ cotizacion_id?: string; name: string; quantity: number; compared: boolean; category?: string; status?: string }>;
+  email_conversations: Array<{
+    id: string; proveedor_nombre?: string; proveedor_email?: string; subject?: string; estado?: string;
+    last_message_at?: string; created_at: string; message_count: number; latest_preview?: string;
+  }>;
 }
 
 export interface EmailDetail extends Omit<EmailRecord, "messages"> {

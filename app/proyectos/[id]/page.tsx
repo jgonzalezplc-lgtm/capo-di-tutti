@@ -7,6 +7,7 @@ import { getProjectDetail } from "@/lib/repository";
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const project = await getProjectDetail(id);
+  const conversations = project.email_conversations || [];
   return <main className="page">
     <Link className="detail-back" href="/base-de-datos?resource=projects"><ArrowLeft size={15} /> Volver a proyectos</Link>
     <SectionHeading eyebrow="PROJECT TRACE" title={project.name} description="Contexto, responsable e ítems que formaron la lista de cotización." />
@@ -17,9 +18,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <div className="detail-field"><span>Estado</span><strong><StatusPill tone={project.status === "completado" ? "green" : "neutral"}>{project.status || "sin estado"}</StatusPill></strong></div>
     </section>
     {project.summary && <section className="panel" style={{ marginBottom: 12 }}><div className="panel__heading"><h2>De qué se trató</h2></div><div style={{ padding: 20 }}>{project.summary}</div></section>}
-    <section className="panel"><div className="panel__heading"><div><span className="eyebrow">LISTA ASOCIADA</span><h2>{project.items.length} ítems</h2></div></div><div className="table-wrap"><table><thead><tr><th>Ítem</th><th>Cantidad</th><th>Categoría</th><th>Estado</th><th>Comparado</th></tr></thead><tbody>
+    <section className="panel" style={{ marginBottom: 12 }}><div className="panel__heading"><div><span className="eyebrow">LISTA ASOCIADA</span><h2>{project.items.length} ítems</h2></div></div><div className="table-wrap"><table><thead><tr><th>Ítem</th><th>Cantidad</th><th>Categoría</th><th>Estado</th><th>Comparado</th></tr></thead><tbody>
       {project.items.map((item, index) => <tr key={item.cotizacion_id || index}><td><strong>{item.name}</strong><small>{item.cotizacion_id}</small></td><td>{item.quantity}</td><td>{item.category || "—"}</td><td>{item.status || "—"}</td><td>{item.compared ? "Sí" : "No"}</td></tr>)}
       {!project.items.length && <tr><td colSpan={5}>Este proyecto no contiene una lista estructurada.</td></tr>}
     </tbody></table></div></section>
+    <section className="panel"><div className="panel__heading"><div><span className="eyebrow">CORREOS ASOCIADOS</span><h2>{conversations.length} conversaciones</h2></div></div>
+      {conversations.map(conversation => <Link className="email-conversation-card" href={`/correos/${conversation.id}`} key={conversation.id}><div><strong>{conversation.subject || "Conversación sin asunto"}</strong><span>{conversation.proveedor_nombre || conversation.proveedor_email || "Proveedor sin identificar"}</span><p>{conversation.latest_preview || "Abre la conversación para leer el historial completo."}</p></div><div><strong>{conversation.message_count} mensajes</strong><span>{new Date(conversation.last_message_at || conversation.created_at).toLocaleString("es-CL")}</span><span className="table-link">Ver contenido →</span></div></Link>)}
+      {!conversations.length && <div className="empty-row">Este proyecto todavía no tiene correos asociados.</div>}
+    </section>
   </main>;
 }
