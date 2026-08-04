@@ -10,6 +10,23 @@ export function getDataMode(): DataMode {
   return process.env.CAPO_DEMO_MODE === "true" ? "demo" : "supabase";
 }
 
+async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  await requireAdmin();
+  const apiUrl = process.env.BAIYER_ADMIN_API_URL;
+  if (!apiUrl) throw new Error("BAIYER_ADMIN_API_URL no está configurada.");
+  const token = await getAdminAccessToken();
+  const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/admin-control-plane${path}`, {
+    ...init,
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(init?.headers ?? {}) },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({})) as { detail?: string };
+    throw new Error(error.detail ?? `Baiyer respondió ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   await requireAdmin();
   if (getDataMode() === "demo") return demoData;
@@ -26,6 +43,41 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
   return mapDashboard(await response.json() as RawDashboard);
 }
+
+export interface PageResult<T> { items: T[]; total: number | null; limit: number; offset: number }
+
+export interface SearchRecord {
+  id: string; created_at: string; user_id: string; user_name: string; user_email?: string;
+  organization_id?: string; organization: string; item_nombre?: string; categoria_predicha?: string;
+  categorias_usadas: string[]; terminos: string[]; modo: string; n_resultados: number; estado: string;
+  cotizacion_id?: string; lista_proyecto_id?: string;
+}
+
+export interface EmailRecord {
+  id: string; created_at: string; last_message_at?: string; user_id: string; user_name: string;
+  user_email?: string; organization_id?: string; organization: string; proveedor_nombre?: string;
+  proveedor_email?: string; subject?: string; estado: string;
+  messages: { total: number; inbound: number; outbound: number; pending: number };
+}
+
+export interface DatabaseResource { key: string; table: string; count: number; available: boolean; error?: string }
+export interface DatabaseSummary { resources: DatabaseResource[] }
+export interface DatabaseRows extends PageResult<Record<string, unknown>> { resource: string }
+
+export interface PlanCatalogEntry {
+  label: string; price: number; limits: { users: number | null; searches_month: number | null; ai_calls_month: number | null };
+}
+export interface PlansData {
+  catalog: Record<string, PlanCatalogEntry>;
+  organizations: Array<Record<string, unknown>>;
+  billing_enabled: boolean;
+}
+
+export const getSearches = () => adminFetch<PageResult<SearchRecord>>("/searches?limit=250");
+export const getEmails = () => adminFetch<PageResult<EmailRecord>>("/emails?limit=250");
+export const getDatabaseSummary = () => adminFetch<DatabaseSummary>("/database");
+export const getDatabaseRows = (resource: string) => adminFetch<DatabaseRows>(`/database/${encodeURIComponent(resource)}?limit=100`);
+export const getPlans = () => adminFetch<PlansData>("/plans");
 
 interface RawDashboard {
   metrics: DashboardData["metrics"];
