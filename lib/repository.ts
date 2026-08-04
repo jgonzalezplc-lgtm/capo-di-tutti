@@ -89,6 +89,11 @@ export interface PlansData {
   billing_enabled: boolean;
 }
 
+export interface OrganizationAdminDetail {
+  organization: Record<string, unknown>;
+  members: Array<Record<string, unknown>>;
+}
+
 export const getSearches = () => adminFetch<PageResult<SearchRecord>>("/searches?limit=250");
 export const getEmails = () => adminFetch<PageResult<EmailRecord>>("/emails?limit=250");
 export const getProjectDetail = (id: string) => adminFetch<ProjectDetail>(`/projects/${encodeURIComponent(id)}`);
@@ -96,6 +101,7 @@ export const getEmailDetail = (id: string) => adminFetch<EmailDetail>(`/emails/$
 export const getDatabaseSummary = () => adminFetch<DatabaseSummary>("/database");
 export const getDatabaseRows = (resource: string) => adminFetch<DatabaseRows>(`/database/${encodeURIComponent(resource)}?limit=100`);
 export const getPlans = () => adminFetch<PlansData>("/plans");
+export const getOrganizationDetail = (id: string) => adminFetch<OrganizationAdminDetail>(`/organizations/${encodeURIComponent(id)}`);
 
 interface RawDashboard {
   metrics: DashboardData["metrics"];
